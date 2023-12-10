@@ -6,9 +6,9 @@ use syn::Token;
 use super::formatting::Formatting;
 
 pub struct Mustache {
-    brace: syn::token::Brace,
-    expr: syn::Expr,
-    formatting: Option<FormattingGroup>,
+    pub brace: syn::token::Brace,
+    pub expr: syn::Expr,
+    pub formatting: Option<FormattingGroup>,
 }
 
 impl syn::parse::Parse for Mustache {
@@ -41,8 +41,8 @@ impl Debug for Mustache {
 }
 
 pub struct FormattingGroup {
-    colon: Token![:],
-    formatting: Formatting,
+    pub colon: Token![:],
+    pub formatting: Formatting,
 }
 
 impl syn::parse::Parse for FormattingGroup {

@@ -2,13 +2,13 @@
 //! Syntax according to the [JSX spec](https://facebook.github.io/jsx)
 //!
 
-use std::fmt::{Debug, write};
+use std::fmt::Debug;
 
 use derive_syn_parse::Parse;
 use quote::ToTokens;
 use syn::{
     parse::ParseStream,
-    Token, spanned::Spanned,
+    Token,
 };
 
 pub enum Root {
@@ -55,10 +55,10 @@ fn parse_fragment_children(input: ParseStream) -> syn::Result<Vec<Child>> {
 
 #[derive(Parse)]
 pub struct Fragment {
-    opening: FragmentOpening,
+    pub opening: FragmentOpening,
     #[call(parse_fragment_children)]
-    children: Children,
-    closing: FragmentClosing,
+    pub children: Children,
+    pub closing: FragmentClosing,
 }
 
 impl Debug for Fragment {
@@ -71,15 +71,15 @@ impl Debug for Fragment {
 
 #[derive(Parse)]
 pub struct FragmentOpening {
-    lt: Token![<],
-    gt: Token![>],
+    pub lt: Token![<],
+    pub gt: Token![>],
 }
 
 #[derive(Parse)]
 pub struct FragmentClosing {
-    lt: Token![<],
-    slash: Token![/],
-    gt: Token![>],
+    pub lt: Token![<],
+    pub slash: Token![/],
+    pub gt: Token![>],
 }
 
 pub enum Element {
@@ -117,9 +117,9 @@ impl syn::parse::Parse for Element {
 }
 
 pub struct ClosedElement {
-    opening: OpeningElement,
-    children: Children,
-    closing: ClosingElement,
+    pub opening: OpeningElement,
+    pub children: Children,
+    pub closing: ClosingElement,
 }
 
 impl Debug for ClosedElement {
@@ -167,7 +167,7 @@ impl syn::parse::Parse for ClosedElement {
     }
 }
 
-fn parse_attrs<'a>(input: ParseStream<'a>) -> syn::Result<Vec<Attribute>> {
+fn parse_attrs(input: ParseStream) -> syn::Result<Vec<Attribute>> {
     let mut t = vec![];
     while !(input.peek(Token![>]) || input.peek(Token![/])) {
         t.push(input.parse()?);
@@ -177,12 +177,12 @@ fn parse_attrs<'a>(input: ParseStream<'a>) -> syn::Result<Vec<Attribute>> {
 
 #[derive(Parse)]
 pub struct SelfClosingElement {
-    lt: Token![<],
-    name: ElementName,
+    pub lt: Token![<],
+    pub name: ElementName,
     #[call(parse_attrs)]
-    attributes: Attributes,
-    slash: Token![/],
-    gt: Token![>],
+    pub attributes: Attributes,
+    pub slash: Token![/],
+    pub gt: Token![>],
 }
 
 impl Debug for SelfClosingElement {
@@ -196,19 +196,19 @@ impl Debug for SelfClosingElement {
 
 #[derive(Parse)]
 pub struct OpeningElement {
-    lt: Token![<],
-    name: ElementName,
+    pub lt: Token![<],
+    pub name: ElementName,
     #[call(parse_attrs)]
-    attributes: Attributes,
-    gt: Token![>],
+    pub attributes: Attributes,
+    pub gt: Token![>],
 }
 
 #[derive(Parse)]
 pub struct ClosingElement {
-    lt: Token![<],
-    slash: Token![/],
-    name: ElementName,
-    gt: Token![>],
+    pub lt: Token![<],
+    pub slash: Token![/],
+    pub name: ElementName,
+    pub gt: Token![>],
 }
 
 ///
@@ -218,7 +218,7 @@ pub struct ClosingElement {
 /// * `<my::module::path::Element />` (path length 4)
 ///
 #[derive(Parse)]
-pub struct ElementName(syn::Path);
+pub struct ElementName(pub syn::Path);
 
 pub type Attributes = Vec<Attribute>;
 pub type Identifier = syn::Ident;
@@ -244,26 +244,26 @@ impl Debug for Attribute {
 #[derive(Parse)]
 pub struct SpreadAttribute {
     #[brace]
-    brace: syn::token::Brace,
+    pub brace: syn::token::Brace,
 
     #[inside(brace)]
-    rest: Token![..],
+    pub rest: Token![..],
 
     #[inside(brace)]
-    expr: syn::Expr,
+    pub expr: syn::Expr,
 }
 
 impl Debug for SpreadAttribute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SpreadAttribute({})", self.expr.to_token_stream().to_string())
+        write!(f, "SpreadAttribute({})", self.expr.to_token_stream())
     }
 }
 
 #[derive(Parse)]
 pub struct NamedAttribute {
-    key: Identifier,
+    pub key: Identifier,
     #[peek(syn::token::Eq)]
-    initializer: Option<AttributeInitializer>,
+    pub initializer: Option<AttributeInitializer>,
 }
 
 impl Debug for NamedAttribute {
@@ -276,8 +276,8 @@ impl Debug for NamedAttribute {
 
 #[derive(Parse)]
 pub struct AttributeInitializer {
-    equals: Token![=],
-    value: AttributeValue,
+    pub equals: Token![=],
+    pub value: AttributeValue,
 }
 
 impl Debug for AttributeInitializer {
@@ -299,7 +299,7 @@ impl Debug for AttributeValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::LitStr(litstr) => write!(f, "{:?}", litstr.value()),
-            Self::Expr(expr) => write!(f, "{}", expr.expr.to_token_stream().to_string()),
+            Self::Expr(expr) => write!(f, "{}", expr.expr.to_token_stream()),
         }
     }
 }
@@ -307,10 +307,10 @@ impl Debug for AttributeValue {
 #[derive(Parse)]
 pub struct ExprAttributeValue {
     #[brace]
-    brace: syn::token::Brace,
+    pub brace: syn::token::Brace,
 
     #[inside(brace)]
-    expr: syn::Expr,
+    pub expr: syn::Expr,
 }
 
 pub type Children = Vec<Child>;
@@ -380,9 +380,9 @@ impl Debug for Text {
 
 #[cfg(test)]
 mod tests {
-    use crate::syntax::jsx::{ClosingElement, ClosedElement, Root};
+    use crate::syntax::jsx::ClosedElement;
 
-    use super::{Element, SelfClosingElement};
+    use super::SelfClosingElement;
 
     #[test]
     fn parse_element() {

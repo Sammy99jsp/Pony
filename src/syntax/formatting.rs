@@ -14,13 +14,13 @@ fn flip<T, E>(o: Option<Result<T, E>>) -> Result<Option<T>, E> {
 /// Formatting syntax based off [`std::fmt`].
 ///
 pub struct Formatting {
-    align: Option<Align>,
-    sign: Option<Sign>,
-    pretty: Option<Pretty>,
-    zero: Option<Zero>,
-    width: Option<Width>,
-    precision: Option<DecimalPrecision>,
-    _type: FormatType,
+    pub align: Option<Align>,
+    pub sign: Option<Sign>,
+    pub pretty: Option<Pretty>,
+    pub zero: Option<Zero>,
+    pub width: Option<Width>,
+    pub precision: Option<DecimalPrecision>,
+    pub ty: FormatType,
 }
 
 impl syn::parse::Parse for Formatting {
@@ -41,7 +41,7 @@ impl syn::parse::Parse for Formatting {
             zero,
             width,
             precision,
-            _type: input.parse()?,
+            ty: input.parse()?,
         })
     }
 }
@@ -74,7 +74,7 @@ impl Debug for Formatting {
             write!(f, "{precision:?}, ")?;
         }
 
-        write!(f, "{:?}", self._type)?;
+        write!(f, "{:?}", self.ty)?;
 
         write!(f, ")")
     }
@@ -82,8 +82,8 @@ impl Debug for Formatting {
 
 #[derive(Parse)]
 pub struct Align {
-    fill: Option<LitChar>,
-    direction: AlignDirection,
+    pub fill: Option<LitChar>,
+    pub direction: AlignDirection,
 }
 
 impl Debug for Align {
@@ -168,7 +168,7 @@ impl Sign {
 }
 
 #[derive(Parse)]
-pub struct Pretty(Token![#]);
+pub struct Pretty(pub Token![#]);
 
 impl Pretty {
     fn peek(input: syn::parse::ParseStream) -> bool {
@@ -185,19 +185,7 @@ impl Debug for Pretty {
 ///
 /// Literally a `0`.
 ///
-pub struct Zero(syn::LitInt);
-
-impl Zero {
-    fn peek(input: syn::parse::ParseStream) -> bool {
-        let f = input.fork();
-        let r: syn::Result<bool> = try {
-            let i: LitInt = input.fork().parse()?;
-            i.to_string().starts_with('0')
-        };
-
-        r.unwrap_or_default()
-    }
-}
+pub struct Zero(pub syn::LitInt);
 
 impl Debug for Zero {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -205,7 +193,7 @@ impl Debug for Zero {
     }
 }
 
-pub struct Width(syn::LitInt);
+pub struct Width(pub syn::LitInt);
 
 impl Debug for Width {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -215,7 +203,7 @@ impl Debug for Width {
     }
 }
 
-struct Numbers(Option<Zero>, Option<Width>, Option<DecimalPrecision>);
+struct Numbers(pub Option<Zero>, pub Option<Width>, pub Option<DecimalPrecision>);
 
 impl Numbers {
     fn peek(input: syn::parse::ParseStream) -> bool {
@@ -300,8 +288,8 @@ impl syn::parse::Parse for Numbers {
 }
 
 pub struct DecimalPrecision {
-    decimal: Token![.],
-    precision: Precision,
+    pub decimal: Token![.],
+    pub precision: Precision,
 }
 
 impl syn::parse::Parse for DecimalPrecision {
@@ -316,12 +304,6 @@ impl syn::parse::Parse for DecimalPrecision {
 impl Debug for DecimalPrecision {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("Precision").field(&self.precision).finish()
-    }
-}
-
-impl DecimalPrecision {
-    fn peek(input: syn::parse::ParseStream) -> bool {
-        input.peek(Token![.])
     }
 }
 
@@ -377,7 +359,7 @@ impl Debug for Count {
 }
 
 #[derive(Parse)]
-pub struct Parameter(syn::Ident, Token![$]);
+pub struct Parameter(pub syn::Ident, pub Token![$]);
 
 impl Debug for Parameter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -437,8 +419,8 @@ impl Debug for FormatType {
 
 #[allow(non_camel_case_types)]
 mod format_chars {
-    pub struct x(pub(super) syn::Ident);
-    pub struct X(pub(super) syn::Ident);
+    pub struct x(pub syn::Ident);
+    pub struct X(pub syn::Ident);
 }
 
 #[cfg(test)]
@@ -453,7 +435,7 @@ mod tests {
         assert!(matches!(
             syn::parse_str("").expect("Valid parse"),
             Formatting {
-                _type: FormatType::Display,
+                ty: FormatType::Display,
                 ..
             }
         ));
@@ -461,7 +443,7 @@ mod tests {
         assert!(matches!(
             syn::parse_str("?").expect("Valid parse"),
             Formatting {
-                _type: FormatType::Debug(_),
+                ty: FormatType::Debug(_),
                 ..
             }
         ));
@@ -469,7 +451,7 @@ mod tests {
         assert!(matches!(
             syn::parse_str("x?").expect("Valid parse"),
             Formatting {
-                _type: FormatType::DebugLowerHex(_, _),
+                ty: FormatType::DebugLowerHex(_, _),
                 ..
             }
         ));
@@ -477,7 +459,7 @@ mod tests {
         assert!(matches!(
             syn::parse_str("X?").expect("Valid parse"),
             Formatting {
-                _type: FormatType::DebugUpperHex(_, _),
+                ty: FormatType::DebugUpperHex(_, _),
                 ..
             }
         ));
@@ -485,7 +467,7 @@ mod tests {
         assert!(matches!(
             syn::parse_str("o").expect("Valid parse"),
             Formatting {
-                _type: FormatType::Other(_),
+                ty: FormatType::Other(_),
                 ..
             }
         ));
