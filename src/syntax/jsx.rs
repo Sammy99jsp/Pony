@@ -5,7 +5,7 @@
 use std::fmt::Debug;
 
 use derive_syn_parse::Parse;
-use quote::ToTokens;
+use quote::{ToTokens, TokenStreamExt};
 use syn::{
     parse::ParseStream,
     Token,
@@ -320,6 +320,7 @@ pub enum Child {
     Element(Element),
     Fragment(Fragment),
     Mustache(Mustache),
+    Comment(Comment),
 }
 
 impl syn::parse::Parse for Child {
@@ -336,6 +337,10 @@ impl syn::parse::Parse for Child {
             return Ok(Self::Mustache(input.parse()?));
         }
 
+        if Comment::peek(input) {
+            return Ok(Self::Comment(input.parse()?));
+        }
+
         Ok(Self::Text(input.parse()?))
     }
 }
@@ -347,6 +352,7 @@ impl Debug for Child {
             Self::Element(element) => write!(f, "{element:?}"),
             Self::Fragment(fragment) => write!(f, "{fragment:?}"),
             Self::Mustache(mustache) => write!(f, "{mustache:?}"),
+            Self::Comment(comment) => write!(f, "{comment:?}")
         }
     }
 }
@@ -358,8 +364,6 @@ pub struct Text(proc_macro2::TokenStream);
 
 impl syn::parse::Parse for Text {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        use quote::TokenStreamExt;
-
         let mut tkns = proc_macro2::TokenStream::new();
 
         // While next tokens aren't `{`, `<`, `>`, `}`.
@@ -378,11 +382,76 @@ impl Debug for Text {
     }
 }
 
+
+///
+/// HTML/XML-style Comment: `<!-- ANYTHING! -->`
+///
+pub struct Comment {
+    pub open: OpenComment,
+    pub contents: proc_macro2::TokenStream,
+    pub closing: CloseComment,
+}
+
+impl Comment {
+    fn peek(input: ParseStream) -> bool {
+        // We need to look at 4 characters,
+        //  which is more than any `input.peek` function gives us.
+
+        // Instead, speculatively parse:
+        let f = input.fork();
+
+        let r: syn::Result<bool> = try {
+            let _: Token![<] = f.parse()?;
+            f.peek(Token![!]) && f.peek2(Token![-]) && f.peek3(Token![-])
+        };
+
+        r.unwrap_or_default()
+    }
+}
+
+impl syn::parse::Parse for Comment {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let open = input.parse()?;
+        let mut contents = proc_macro2::TokenStream::new();
+
+        while !(input.peek(Token![-]) && input.peek2(Token![-]) && input.peek3(Token![>])) {
+            contents.append::<proc_macro2::TokenTree>(input.parse()?);
+        }
+
+        Ok(Self {
+            open,
+            contents,
+            closing: input.parse()?,
+        })
+    }
+}
+
+impl Debug for Comment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Comment({})", self.contents.to_token_stream())
+    }
+}
+
+#[derive(Parse)]
+pub struct OpenComment {
+    pub lt: Token![<],
+    pub bang: Token![!],
+    pub minus1: Token![-],
+    pub minus2: Token![-],
+}
+
+#[derive(Parse)]
+pub struct CloseComment {
+    pub m1: Token![-],
+    pub m2: Token![-],
+    pub gt: Token![>],
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::syntax::jsx::ClosedElement;
+    use crate::syntax::jsx::{ClosedElement, Element};
 
-    use super::SelfClosingElement;
+    use super::{SelfClosingElement, Comment};
 
     #[test]
     fn parse_element() {
@@ -397,5 +466,17 @@ mod tests {
         "#).expect("Valid parse");
 
         println!("{el:#?}")
+    }
+
+    #[test]
+    fn parse_comment() {
+        let _: Comment = syn::parse_str(r#"<!-- Hello world! -->"#).expect("Valid parse");
+
+        let _: Comment = syn::parse_str(r#"<!-- <Button primary>Commented out element.</Button> -->"#).expect("Valid parse");
+        
+        let _: Element = syn::parse_str(r#"<Button primary={true}>
+            <!-- FIXME: CVE in the hashing/salting code! -->
+            Log In 
+        </Button>"#).expect("Valid parse");
     }
 }
