@@ -451,7 +451,7 @@ pub struct CloseComment {
 mod tests {
     use crate::syntax::jsx::{ClosedElement, Element};
 
-    use super::{SelfClosingElement, Comment};
+    use super::{SelfClosingElement, Comment, Root};
 
     #[test]
     fn parse_element() {
@@ -478,5 +478,23 @@ mod tests {
             <!-- FIXME: CVE in the hashing/salting code! -->
             Log In 
         </Button>"#).expect("Valid parse");
+    }
+
+    #[test]
+    fn pretty_print_test() {
+        let x: Root = syn::parse_str(r#"
+            <Modal>
+                <Title>Confirm Transaction</Title>
+                <Body>
+                    Are you sure you want to spend $1 000.00 on Bitcoin?
+                </Body>
+                <Footer>
+                    <Action primary>Yes</Action>
+                    <Action secondary>No</Action>
+                </Footer>
+            </Modal>
+        "#).expect("Valid parse");
+
+        println!("{x:#?}");
     }
 }
