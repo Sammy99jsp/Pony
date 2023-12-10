@@ -19,8 +19,8 @@ pub enum Root {
 impl Debug for Root {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Element(element) => write!(f, "{element:?}"),
-            Self::Fragment(fragment) => write!(f, "{fragment:?}"),
+            Self::Element(element) => element.fmt(f),
+            Self::Fragment(fragment) => fragment.fmt(f),
         }
     }
 }
@@ -90,8 +90,8 @@ pub enum Element {
 impl Debug for Element {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Closed(closed) => write!(f, "{closed:?}"),
-            Self::SelfClosing(self_closing) => write!(f, "{self_closing:?}"),
+            Self::Closed(closed) => closed.fmt(f),
+            Self::SelfClosing(self_closing) => self_closing.fmt(f),
         }
     }
 }
@@ -235,8 +235,8 @@ pub enum Attribute {
 impl Debug for Attribute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Spread(spread) => write!(f, "{spread:?}"),
-            Self::Named(named) => write!(f, "{named:?}"),
+            Self::Spread(spread) => spread.fmt(f),
+            Self::Named(named) => named.fmt(f),
         }
     }
 }
@@ -282,7 +282,7 @@ pub struct AttributeInitializer {
 
 impl Debug for AttributeInitializer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.value)
+        self.value.fmt(f)
     }
 }
 
@@ -348,11 +348,11 @@ impl syn::parse::Parse for Child {
 impl Debug for Child {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Text(text) => write!(f, "{text:?}"),
-            Self::Element(element) => write!(f, "{element:?}"),
-            Self::Fragment(fragment) => write!(f, "{fragment:?}"),
-            Self::Mustache(mustache) => write!(f, "{mustache:?}"),
-            Self::Comment(comment) => write!(f, "{comment:?}")
+            Self::Text(text) => text.fmt(f),
+            Self::Element(element) => element.fmt(f),
+            Self::Fragment(fragment) => fragment.fmt(f),
+            Self::Mustache(mustache) => mustache.fmt(f),
+            Self::Comment(comment) => comment.fmt(f),
         }
     }
 }
@@ -451,7 +451,7 @@ pub struct CloseComment {
 mod tests {
     use crate::syntax::jsx::{ClosedElement, Element};
 
-    use super::{SelfClosingElement, Comment};
+    use super::{SelfClosingElement, Comment, Root};
 
     #[test]
     fn parse_element() {
@@ -478,5 +478,23 @@ mod tests {
             <!-- FIXME: CVE in the hashing/salting code! -->
             Log In 
         </Button>"#).expect("Valid parse");
+    }
+
+    #[test]
+    fn pretty_print_test() {
+        let x: Root = syn::parse_str(r#"
+            <Modal>
+                <Title>Confirm Transaction</Title>
+                <Body>
+                    Are you sure you want to spend $1 000.00 on Bitcoin?
+                </Body>
+                <Footer>
+                    <Action primary>Yes</Action>
+                    <Action secondary>No</Action>
+                </Footer>
+            </Modal>
+        "#).expect("Valid parse");
+
+        println!("{x:#?}");
     }
 }
