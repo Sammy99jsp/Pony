@@ -101,7 +101,7 @@ impl syn::parse::Parse for Element {
         let f = input.fork();
 
         let _: Token![<] = f.parse()?;
-        let _: syn::Ident = f.parse()?;
+        let _: syn::Path = f.parse()?;
         let _: Vec<Attribute> = parse_attrs(&f)?;
 
         if f.peek(Token![/]) {
@@ -496,5 +496,12 @@ mod tests {
         "#).expect("Valid parse");
 
         println!("{x:#?}");
+    }
+
+    #[test]
+    fn element_path_test() {
+        let _: Element = syn::parse_str(r#"<icon::Cactus color="green" />"#).expect("Valid parse");
+        let _: Element = syn::parse_str(r#"<model::Button>Hello World!</model::Button>"#).expect("Valid parse");
+        let _: Element = syn::parse_str(r#"<model::Button primary>Hello World!</model::Button>"#).expect("Valid parse");
     }
 }
