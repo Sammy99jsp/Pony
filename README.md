@@ -12,25 +12,25 @@ A declarative syntax that many are already familiar with.
 
 ```jsx
 <Modal>
-    <Modal.Title>
+    <modal::Title>
         Delete <T mono>system32</T>?
-    </Modal.Title>
-    <Modal.Description>
+    </model::Title>
+    <model::Description>
         This may cause irrecoverable damage to your computer? <Br />
         Do you wish to continue?
-    </Modal.Description>
-    <Modal.Footer>
-        <Modal.Action secondary>
+    </model::Description>
+    <model::Footer>
+        <modal::Action secondary>
             <Button>
-                <Icon.Cross /> {i11n("GENERIC.CANCEL")}
+                <icon::Cross /> {i11n("GENERIC.CANCEL")}
             </Button>
-        </Modal.Action>
-        <Modal.Action primary>
+        </model::Action>
+        <model::Action primary>
             <Button>
-                <Icon.TrashCan /> {i11n("SYSTEM32_MODAL.DELETE")}
+                <icon::TrashCan /> {i11n("SYSTEM32_MODAL.DELETE")}
             </Button>
-        </Modal.Action>
-    </Modal.Footer>
+        </modal::Action>
+    </modal::Footer>
 </Modal>
 ```
 
