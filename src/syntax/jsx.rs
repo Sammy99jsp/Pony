@@ -41,7 +41,7 @@ impl syn::parse::Parse for Root {
     }
 }
 
-use super::mustache::Mustache;
+use super::{mustache::Mustache, pretty_rust};
 
 fn parse_fragment_children(input: ParseStream) -> syn::Result<Vec<Child>> {
     let mut children = vec![];
@@ -257,7 +257,7 @@ pub struct SpreadAttribute {
 
 impl Debug for SpreadAttribute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "SpreadAttribute({})", self.expr.to_token_stream())
+        write!(f, "SpreadAttribute({})", pretty_rust(&self.expr))
     }
 }
 
@@ -301,7 +301,7 @@ impl Debug for AttributeValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::LitStr(litstr) => write!(f, "{:?}", litstr.value()),
-            Self::Expr(expr) => write!(f, "{}", expr.expr.to_token_stream()),
+            Self::Expr(expr) => write!(f, "{}", pretty_rust(&expr.expr)),
         }
     }
 }
@@ -437,7 +437,7 @@ impl syn::parse::Parse for Comment {
 
 impl Debug for Comment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Comment({})", self.contents.to_token_stream())
+        write!(f, "Comment({})", pretty_rust(&self.contents))
     }
 }
 

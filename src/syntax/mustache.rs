@@ -1,9 +1,8 @@
 use std::fmt::Debug;
 
-use quote::ToTokens;
 use syn::Token;
 
-use super::formatting::Formatting;
+use super::{formatting::Formatting, pretty_rust};
 
 pub struct Mustache {
     pub brace: syn::token::Brace,
@@ -30,7 +29,7 @@ impl Debug for Mustache {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = f.debug_struct("Mustache");
 
-        s.field("expr", &self.expr.to_token_stream().to_string());
+        s.field_with("expr", |f| write!(f, "{}", pretty_rust(&self.expr)));
 
         if let Some(ref formatting) = self.formatting {
             s.field("formatting", formatting);
