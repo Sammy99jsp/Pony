@@ -59,6 +59,9 @@ use crate::syntax::jsx::Child;
 
 use super::{inside_braces, parse_divided_until, parse_until, Peek};
 
+/// 
+/// See module documentation: [self].
+/// 
 pub struct IfBlock {
     pub opening: IfOpening,
     pub children: Vec<Child>,
@@ -284,33 +287,40 @@ mod tests {
 
         let _nested: IfBlock = syn::parse_str(
             r#"{#if rainbow.burns(&sky.stars)}
-                {#if ocean.covers(mountains.high().every())}
-                    {#if Dolphin.flies() && Parrot.lives(Sea)}
-                        {#if we.dream_of(Life) && Life == A(Dream)}
-                            {#if Day == Night && Night == Day}
-                                {#if trees.up_and_fly_away() && seas.up_and_fly_away()}
-                                    {#if 8 * 8 * 8 == 4}
-                                        {#if the_day().that_is(the_day().that_are(NoMore))}
-                                            {#if the_earth().turning(Direction::RightToLeft)}
-                                                {#if the_earth().just_for(the_sun()).denies(the_earth())}
-                                                    {#if mother_nature().says("My work is through.")}
-                                                        {#if the_day().that(|_| you() == me() && I() == you())}
-                                                            Not loving you anymore.
-                                                        {/if}
-                                                    {/if}
-                                                {/if}
-                                            {/if}
-                                        {/if}
-                                    {/if}
+              {#if ocean.covers(mountains.high().every())}
+                {#if Dolphin.flies() && Parrot.lives(Sea)}
+                  {#if we.dream_of(Life) && Life == A(Dream)}
+                    {#if Day == Night && Night == Day}
+                      {#if trees.up_and_fly_away() && seas.up_and_fly_away()}
+                        {#if 8 * 8 * 8 == 4}
+                          {#if the_day().that_is(the_day().that_are(NoMore))}
+                            {#if the_earth().turning(Direction::RightToLeft)}
+                              {#if the_earth().just_for(the_sun()).denies(the_earth())}
+                                {#if mother_nature().says("My work is through.")}
+                                  {#if the_day().that(|_| you() == me() && I() == you())}
+                                    Not loving you anymore.
+                                  {/if}
                                 {/if}
+                              {/if}
                             {/if}
+                          {/if}
                         {/if}
+                      {/if}
                     {/if}
+                  {/if}
                 {/if}
-            {/if}
-            "#
+              {/if}
+            {/if}"#
         ).expect("Valid parse");
 
-        println!("{_nested:#?}")
+        let _pattern_syntax: IfBlock = syn::parse_str(
+         r#"{#if let Some(apple) = fruit.iter().filter_map(|f| f.as_apple()).next()}
+                How'd you like this apple: {apple:?} ?
+            {:else}
+                No apples.
+            {/if}"#
+        ).expect("Valid parse");
+
+        println!("{_pattern_syntax:?}");
     }
 }
