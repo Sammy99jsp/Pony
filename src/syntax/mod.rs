@@ -1,11 +1,10 @@
 use proc_macro2::{Delimiter, TokenTree};
 use quote::ToTokens;
 
+pub mod formatting;
 pub mod jsx;
 pub mod mustache;
-pub mod formatting;
-pub mod  svelte;
-
+pub mod svelte;
 
 pub fn pretty_rust(tokens: &impl ToTokens) -> String {
     use std::fmt::Write;
@@ -33,7 +32,7 @@ pub fn pretty_rust(tokens: &impl ToTokens) -> String {
                     ':' => ": ".to_string(),
                     ';' => ";\n".to_string(),
                     ',' => ", ".to_string(),
-                    p => format!(" {p} ")
+                    p => format!(" {p} "),
                 },
                 TokenTree::Literal(l) => l.to_string(),
             }
@@ -44,7 +43,6 @@ pub fn pretty_rust(tokens: &impl ToTokens) -> String {
     let out = out.replace(". ", ".");
     let out = out.replace("( ", "(");
     let out = out.replace("= =", "=");
-    
 
     let out = out.replace(": : ", "::");
     let out = out.replace(":: ", "::");

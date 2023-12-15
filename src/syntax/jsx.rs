@@ -6,15 +6,12 @@ use std::fmt::Debug;
 
 use derive_syn_parse::Parse;
 use quote::{ToTokens, TokenStreamExt};
-use syn::{
-    parse::ParseStream,
-    Token,
-};
+use syn::{parse::ParseStream, Token};
 
 pub enum Root {
     Element(Element),
     Fragment(Fragment),
-    Block(svelte::Block)
+    Block(svelte::Block),
 }
 
 impl Debug for Root {
@@ -33,7 +30,7 @@ impl syn::parse::Parse for Root {
             if input.peek2(Token![>]) {
                 return Ok(Self::Fragment(input.parse()?));
             }
-            
+
             if input.peek2(syn::Ident) {
                 return Ok(Self::Element(input.parse()?));
             }
@@ -47,7 +44,11 @@ impl syn::parse::Parse for Root {
     }
 }
 
-use super::{mustache::Mustache, pretty_rust, svelte::{self, Peek}};
+use super::{
+    mustache::Mustache,
+    pretty_rust,
+    svelte::{self, Peek},
+};
 
 fn parse_fragment_children(input: ParseStream) -> syn::Result<Vec<Child>> {
     let mut children = vec![];
@@ -113,7 +114,7 @@ impl syn::parse::Parse for Element {
         if f.peek(Token![/]) {
             return Ok(Self::SelfClosing(input.parse()?));
         }
-        
+
         if f.peek(Token![>]) {
             return Ok(Self::Closed(input.parse()?));
         }
@@ -144,7 +145,10 @@ impl syn::parse::Parse for ClosedElement {
         let mut children = vec![];
         loop {
             if input.is_empty() {
-                return Err(input.error(format!("Did not find appropriate closing tag `<{}/>`", opening.name.0.to_token_stream())));
+                return Err(input.error(format!(
+                    "Did not find appropriate closing tag `<{}/>`",
+                    opening.name.0.to_token_stream()
+                )));
             }
 
             if input.peek(Token![<]) && input.peek2(Token![/]) && input.peek3(syn::Ident) {
@@ -156,9 +160,7 @@ impl syn::parse::Parse for ClosedElement {
                 if i.segments
                     .iter()
                     .zip(opening.name.0.segments.iter())
-                    .all(|(a, b)| {
-                        a.ident == b.ident
-                    })
+                    .all(|(a, b)| a.ident == b.ident)
                 {
                     return Ok(Self {
                         opening,
@@ -166,7 +168,10 @@ impl syn::parse::Parse for ClosedElement {
                         closing: input.parse()?,
                     });
                 } else {
-                    return Err(input.error(format!("Expected closing tag `<{}/>` here", opening.name.0.to_token_stream())))
+                    return Err(input.error(format!(
+                        "Expected closing tag `<{}/>` here",
+                        opening.name.0.to_token_stream()
+                    )));
                 }
             }
 
@@ -386,7 +391,6 @@ impl syn::parse::Parse for Text {
             tkns.append(input.parse::<proc_macro2::TokenTree>()?)
         }
 
-
         // Fixes the bug where invalid syntax within a ClosedElement could lead to
         // and infinite loop as Text would parse without taking any tokens.
         if tkns.is_empty() {
@@ -403,7 +407,6 @@ impl Debug for Text {
         // f.debug_tuple("Text").field(&self.0.to_string()).finish()
     }
 }
-
 
 ///
 /// HTML/XML-style Comment: `<!-- ANYTHING! -->`
@@ -473,36 +476,48 @@ pub struct CloseComment {
 mod tests {
     use crate::syntax::jsx::{ClosedElement, Element};
 
-    use super::{SelfClosingElement, Comment, Root};
+    use super::{Comment, Root, SelfClosingElement};
 
     #[test]
     fn parse_element() {
-        let _: SelfClosingElement = syn::parse_str(r#"
+        let _: SelfClosingElement = syn::parse_str(
+            r#"
             <Button cool willToLive={8*8*8==4} {..stuff} />
-        "#).expect("Valid parse");
-        
-        let _: ClosedElement = syn::parse_str(r#"
+        "#,
+        )
+        .expect("Valid parse");
+
+        let _: ClosedElement = syn::parse_str(
+            r#"
             <Button onClick={|| count += 1}>
                 Clicked {count:'0'>3?} times!
             </Button>
-        "#).expect("Valid parse");
+        "#,
+        )
+        .expect("Valid parse");
     }
 
     #[test]
     fn parse_comment() {
         let _: Comment = syn::parse_str(r#"<!-- Hello world! -->"#).expect("Valid parse");
 
-        let _: Comment = syn::parse_str(r#"<!-- <Button primary>Commented out element.</Button> -->"#).expect("Valid parse");
-        
-        let _: Element = syn::parse_str(r#"<Button primary={true}>
+        let _: Comment =
+            syn::parse_str(r#"<!-- <Button primary>Commented out element.</Button> -->"#)
+                .expect("Valid parse");
+
+        let _: Element = syn::parse_str(
+            r#"<Button primary={true}>
             <!-- FIXME: CVE in the hashing/salting code! -->
             Log In 
-        </Button>"#).expect("Valid parse");
+        </Button>"#,
+        )
+        .expect("Valid parse");
     }
 
     #[test]
     fn pretty_print_test() {
-        let _: Root = syn::parse_str(r#"
+        let _: Root = syn::parse_str(
+            r#"
             <Modal>
                 <Title>Confirm Transaction</Title>
                 <Body>
@@ -513,45 +528,58 @@ mod tests {
                     <Action secondary>No</Action>
                 </Footer>
             </Modal>
-        "#).expect("Valid parse");
+        "#,
+        )
+        .expect("Valid parse");
     }
 
     #[test]
     fn unbalanced_angle_brackets() {
         // Before, there used to be a bug where malformed syntax
         // would loop forever -- this is because Text was allowed be empty.
-        syn::parse_str::<Root>(r#"
+        syn::parse_str::<Root>(
+            r#"
             <Columns
                 Column>
                     <Columns>
                         <Column>I'm nested!</Column>
                     </Columns>
                 </Column>
-            /Columns>"#).expect_err("Invalid parse");
+            /Columns>"#,
+        )
+        .expect_err("Invalid parse");
 
-        syn::parse_str::<Root>(r#"
+        syn::parse_str::<Root>(
+            r#"
             <Columns>
                 Column>
                     <Columns>
                         <Column>I'm nested!</Column>
                     </Columns>
                 </Column>
-            /Columns>"#).expect_err("Invalid parse");
+            /Columns>"#,
+        )
+        .expect_err("Invalid parse");
     }
 
     #[test]
     fn element_path_test() {
         let _: Element = syn::parse_str(r#"<icon::Cactus color="green" />"#).expect("Valid parse");
-        let _: Element = syn::parse_str(r#"<model::Button>Hello World!</model::Button>"#).expect("Valid parse");
-        syn::parse_str::<Element>(r#"<model::Button primary>Hello World!</model::Butt3on>"#).expect_err("Invalid parse");
+        let _: Element =
+            syn::parse_str(r#"<model::Button>Hello World!</model::Button>"#).expect("Valid parse");
+        syn::parse_str::<Element>(r#"<model::Button primary>Hello World!</model::Butt3on>"#)
+            .expect_err("Invalid parse");
 
-        let _: Root = syn::parse_str(r#"
+        let _: Root = syn::parse_str(
+            r#"
             <Columns>
                 <Column>
                     <Columns>
                         <Column>I'm nested!</Column>
                     </Columns>
                 </Column>
-            </Columns>"#).expect("Valid parse");
+            </Columns>"#,
+        )
+        .expect("Valid parse");
     }
 }

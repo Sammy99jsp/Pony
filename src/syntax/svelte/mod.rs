@@ -26,22 +26,25 @@
 //! - `{@debug ...}`
 //!
 
-pub mod block;
+pub mod blocks;
 
-use syn::parse::ParseStream;
-pub use block::Block;
+pub use blocks::Block;
+use syn::parse::{ParseBuffer, ParseStream};
 
-pub trait Peek {
+pub(crate) trait Peek {
     fn peek(input: ParseStream) -> bool;
 }
 
-
+pub(crate) fn inside_braces(input: ParseStream) -> syn::Result<ParseBuffer> {
+    (|| {
+        let inner;
+        let _ = syn::braced!(inner in input.fork());
+        Ok(inner)
+    })()
+}
 
 pub mod kw {
     use syn::custom_keyword;
 
     custom_keyword!(case);
 }
-
-
-
