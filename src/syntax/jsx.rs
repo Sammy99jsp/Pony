@@ -13,7 +13,8 @@ use syn::{
 
 pub enum Root {
     Element(Element),
-    Fragment(Fragment)
+    Fragment(Fragment),
+    Block(svelte::Block)
 }
 
 impl Debug for Root {
@@ -21,6 +22,7 @@ impl Debug for Root {
         match self {
             Self::Element(element) => element.fmt(f),
             Self::Fragment(fragment) => fragment.fmt(f),
+            Self::Block(block) => block.fmt(f),
         }
     }
 }
@@ -37,11 +39,15 @@ impl syn::parse::Parse for Root {
             }
         }
 
+        if svelte::Block::peek(input) {
+            return Ok(Self::Block(input.parse()?));
+        }
+
         Err(input.error("Expected either element or fragment here"))
     }
 }
 
-use super::{mustache::Mustache, pretty_rust};
+use super::{mustache::Mustache, pretty_rust, svelte::{self, Peek}};
 
 fn parse_fragment_children(input: ParseStream) -> syn::Result<Vec<Child>> {
     let mut children = vec![];
@@ -323,6 +329,8 @@ pub enum Child {
     Fragment(Fragment),
     Mustache(Mustache),
     Comment(Comment),
+    Block(svelte::Block),
+    // STag(svelte::STag),
 }
 
 impl syn::parse::Parse for Child {
@@ -333,6 +341,10 @@ impl syn::parse::Parse for Child {
 
         if input.peek(Token![<]) && input.peek2(syn::Ident) {
             return Ok(Self::Element(input.parse()?));
+        }
+
+        if svelte::Block::peek(input) {
+            return Ok(Self::Block(input.parse()?));
         }
 
         if input.peek(syn::token::Brace) {
@@ -355,6 +367,7 @@ impl Debug for Child {
             Self::Fragment(fragment) => fragment.fmt(f),
             Self::Mustache(mustache) => mustache.fmt(f),
             Self::Comment(comment) => comment.fmt(f),
+            Self::Block(block) => block.fmt(f),
         }
     }
 }

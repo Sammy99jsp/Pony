@@ -4,6 +4,7 @@ use quote::ToTokens;
 pub mod jsx;
 pub mod mustache;
 pub mod formatting;
+pub mod  svelte;
 
 
 pub fn pretty_rust(tokens: &impl ToTokens) -> String {
