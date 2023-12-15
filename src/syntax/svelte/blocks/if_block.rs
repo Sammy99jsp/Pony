@@ -1,3 +1,53 @@
+//!
+//! ## `{#if}`
+//! 
+//! Direct port from Svelte + Rust pattern matching syntax.
+//! 
+//! ### Dividers
+//! #### `{:else if <expr>}`
+//! #### `{:if}`
+//! 
+//! ### Examples
+//! #### Boolean use
+//!  ```svelte
+//! {#if chairs.empty() && tables.empty()}
+//!     Where my friends shall eat no more!
+//! {/if}
+//! ```
+//! 
+//! ```svelte
+//! {#if this}
+//!     It's this!
+//! {:else}
+//!     It's that!
+//! {/if}
+//! ```
+//! 
+//! ```svelte
+//! {#if this}
+//!     It's this!
+//! {:else if that}
+//!     It's that!
+//! {:else}
+//!     It's neither!
+//! {/if}
+//! ```
+//! #### Pattern Matching
+//! ```svelte
+//! {#if let Some(easter_egg) = game.find_easter_egg()}
+//!     <!-- Ode to Warren Robinett -->
+//! {/if}
+//! ```
+//! 
+//! ```svelte
+//! {#if let Some(who_asked) = your_comment.who(|w| w.asked()).next()}
+//!     Found someone who asked: it's {who_asked:?}.
+//! {:else}
+//!     Literally no one asked.
+//! {/if}
+//! ```
+//! 
+
 use std::fmt::Debug;
 
 use derive_syn_parse::Parse;
