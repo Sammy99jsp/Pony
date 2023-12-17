@@ -1,6 +1,6 @@
 use derive_syn_parse::Parse;
-use syn::{LitChar, LitInt, Token};
 use std::fmt::Debug;
+use syn::{LitChar, LitInt, Token};
 
 fn flip<T, E>(o: Option<Result<T, E>>) -> Result<Option<T>, E> {
     match o {
@@ -203,7 +203,11 @@ impl Debug for Width {
     }
 }
 
-struct Numbers(pub Option<Zero>, pub Option<Width>, pub Option<DecimalPrecision>);
+struct Numbers(
+    pub Option<Zero>,
+    pub Option<Width>,
+    pub Option<DecimalPrecision>,
+);
 
 impl Numbers {
     fn peek(input: syn::parse::ParseStream) -> bool {
@@ -426,8 +430,8 @@ mod format_chars {
 #[cfg(test)]
 mod tests {
     use super::{
-        Align, AlignDirection, Count, DecimalPrecision, FormatType, Parameter, Precision, Pretty,
-        Sign, Width, Zero, Formatting
+        Align, AlignDirection, Count, DecimalPrecision, FormatType, Formatting, Parameter,
+        Precision, Pretty, Sign, Width, Zero,
     };
 
     #[test]
