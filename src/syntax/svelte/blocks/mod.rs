@@ -12,19 +12,27 @@
 use std::fmt::Debug;
 use syn::parse::ParseStream;
 
+use self::match_block::MatchBlock;
+
 use super::{inside_braces, Peek};
 
 pub mod if_block;
+pub mod match_block;
 use if_block::IfBlock;
 
 pub enum Block {
     If(IfBlock),
+    Match(MatchBlock),
 }
 
 impl syn::parse::Parse for Block {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if IfBlock::peek(input) {
             return Ok(Self::If(input.parse()?));
+        }
+        
+        if MatchBlock::peek(input) {
+            return Ok(Self::Match(input.parse()?));
         }
 
         unimplemented!("Ahhh")
@@ -35,6 +43,7 @@ impl Debug for Block {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::If(if_block) => if_block.fmt(f),
+            Self::Match(match_block) => match_block.fmt(f),
         }
     }
 }
@@ -42,6 +51,7 @@ impl Debug for Block {
 impl Peek for Block {
     fn peek(input: ParseStream) -> bool {
         IfBlock::peek(input)
+        || MatchBlock::peek(input)
         // || ;
     }
 }
