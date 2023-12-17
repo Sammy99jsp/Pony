@@ -148,6 +148,14 @@ impl Peek for MatchClosing {
     }
 }
 
+fn guard_parse(input: ParseStream) -> syn::Result<Option<(Token![if], syn::Expr)>> {
+    if input.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some((input.parse()?, input.parse()?)))
+}
+
 #[derive(Parse)]
 pub struct CaseDivider {
     #[brace]
@@ -162,6 +170,10 @@ pub struct CaseDivider {
     #[inside(brace)]
     #[call(syn::Pat::parse_multi_with_leading_vert)]
     pub pattern: syn::Pat,
+
+    #[inside(brace)]
+    #[call(guard_parse)]
+    pub guard: Option<(Token![if], syn::Expr)>
 }
 
 impl Peek for CaseDivider {
