@@ -221,6 +221,56 @@ mod tests {
             {/match}"#
         ).expect("Valid parse");
 
-        println!("{_single_case:#?}");
+        // Single case divider, with if guard. 
+
+        let _single_case_guard: MatchBlock = syn::parse_str(
+            r#"{#match text}
+                {:case Text::Ascii(l) if l == 'a'}
+                    Lowercase <mono>a</mono>.
+            {/match}"#
+        ).expect("Valid parse");
+
+
+        // Multiple case dividers.
+        let _multi_case: MatchBlock = syn::parse_str(
+            r#"{#match example}
+                {:case Example::First}
+                    First place.
+                {:case Example::Second}
+                    Second place.
+                {:case Example::Third}
+                    Third place.
+                {:case _}
+                    Loser variant!
+            {/match}"#
+        ).expect("Valid parse");
+
+        // Complex nestsed example.
+        let _nested: MatchBlock = syn::parse_str(
+            r#"{#match outer}
+                <!-- Outer enum match-->
+                {:case Outer::Acceptable(acceptable_value)}
+                    <Success>
+                        {#match acceptable_value}
+                            <!-- Inner enum match -->
+                            {:case Acceptable::Text(txt) if !txt.is_ascii()}
+                                Text contains non-ASCII characters, so we'll try our best: {txt}
+                            {:case Acceptable::Text(txt) if txt.is_ascii()}
+                                Acceptable text value: {txt}
+                        {/match}
+                    </Success>
+                {:case Outer::Unacceptable(unacceptable_value)}
+                    <Error>
+                        {#match unacceptable_value}
+                            {:case (Reason::ConnectionLost, partial)}
+                                <Header>Connection lost.</Header>
+                                Here's what we got before you lost connection: {partial:?}
+                            {:case (Reason::Banned, partial)}
+                                <Header>You were banned.</Header>
+                                You tried to send {partial:?}, which is against our acceptable language guidelines.
+                        {/match}
+                    </Error>
+            {/match}"#
+        ).expect("Valid parse");
     }
 }
