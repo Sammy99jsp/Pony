@@ -182,3 +182,33 @@ impl Debug for CaseDivider {
             .finish()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MatchBlock;
+
+    #[test]
+    fn parse_match_test() {
+        // Empty match block -- syntactically valid, but not semantically.
+        let _empty: MatchBlock = syn::parse_str(
+            r#"{#match true}{/match}"#
+        ).expect("Valid parse");
+
+        // Empty match block with comments.
+        let _empty_comment: MatchBlock = syn::parse_str(
+            r#"{#match 8*8*8}
+                <!-- Seriously, you need to stop with the Stevie Wonder reference -- It's not funny. -->
+            {/match}"#
+        ).expect("Valid parse");
+        
+        // Single case divider
+        let _single_case: MatchBlock = syn::parse_str(
+            r#"{#match singleton_enum}
+                {:case SingletonEnum::SingleVariant}
+                    Single variant.
+            {/match}"#
+        ).expect("Valid parse");
+
+        println!("{_single_case:#?}");
+    }
+}
